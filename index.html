@@ -573,7 +573,9 @@
         // تفعيل الوضع السري
         function activateSpeedMode() {
             if (speedMode) return;
-            
+             if (!gameRunning) {
+        startGame();
+    }
             speedMode = true;
             originalSpeed = emoji.speed;
             emoji.speed *= 8; // خفضنا من 20x إلى 5x لتجنب المشاكل
