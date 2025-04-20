@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة محمد 🚀</title>
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --accent-color: #ff4d4d;
+            --text-color: #2c3e50;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Tajawal', 'Arial', sans-serif;
+            background: linear-gradient(to right, var(--light-color), #e9ecef);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+           
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .description {
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+        
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 15px;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-box {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            flex: 1;
+            max-width: 150px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #startBtn {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+        }
+        
+        #resetBtn {
+            background: linear-gradient(to right, var(--accent-color), #ff7676);
+        }
+        
+        .touch-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            z-index: 20;
+            opacity: 0.3; /* شفافية لتظهر منطقة اللعبة */
+            display: none; /* مخفي بشكل افتراضي */
+        }
+        
+        /* عرض التحكم على الهاتف فقط */
+        @media (max-width: 768px) {
+            .touch-controls {
+                display: block;
+            }
+        }
+        
+        .cheat-code-container {
+            margin-top: 15px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #cheatCodeInput {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            width: 100%;
+            max-width: 300px;
+            font-size: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        #cheatCodeInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.2);
+        }
+        
+        .speed-mode {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 215, 0, 0.9);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: none;
+            animation: pulse 0.5s infinite alternate;
+        }
+        
+        .bloom-mode-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+        }
+        
+        @keyframes bloomPulse {
+            0% { background-color: rgba(255, 182, 193, 0.3); }
+            50% { background-color: rgba(255, 192, 203, 0.5); }
+            100% { background-color: rgba(255, 182, 193, 0.3); }
+        }
+        
+        .bloom-mode-active {
+            animation: bloomPulse 3s infinite;
+        }
+        
+        .bloom-particle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="pink" d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M15.5,8C16.3,8 17,8.7 17,9.5C17,10.3 16.3,11 15.5,11C14.7,11 14,10.3 14,9.5C14,8.7 14.7,8 15.5,8M8.5,8C9.3,8 10,8.7 10,9.5C10,10.3 9.3,11 8.5,11C7.7,11 7,10.3 7,9.5C7,8.7 7.7,8 8.5,8M12,11.5C13.1,11.5 14,12.4 14,13.5C14,14.6 13.1,15.5 12,15.5C10.9,15.5 10,14.6 10,13.5C10,12.4 10.9,11.5 12,11.5M19,17.5C19,18.3 18.3,19 17.5,19C16.7,19 16,18.3 16,17.5C16,16.7 16.7,16 17.5,16C18.3,16 19,16.7 19,17.5M6.5,19C7.3,19 8,18.3 8,17.5C8,16.7 7.3,16 6.5,16C5.7,16 5,16.7 5,17.5C5,18.3 5.7,19 6.5,19Z"/></svg>');
+            background-size: contain;
+            pointer-events: none;
+            z-index: 5;
+        }
+        body.bloom-mode {
+            background: linear-gradient(to bottom, #fff0f5, #ffd6e7) !important;
+            animation: bloomPulse 5s infinite alternate;
+        }
+        
+        @keyframes bloomPulse {
+            0% { background-color: #fff0f5; }
+            50% { background-color: #ffd6e7; }
+            100% { background-color: #ffe0ee; }
+        }
+        
+        .bloom-flower {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+            font-size: 24px;
+            animation: falling linear infinite;
+        }
+        
+        @keyframes falling {
+            0% {
+                top: -50px;
+                animation-timing-function: ease-in;
+            }
+            100% {
+                top: 100vh;
+                animation-timing-function: ease-out;
+            }
+        }
+        
+        @keyframes sway {
+            0% {
+                transform: translateX(0) rotate(0deg);
+            }
+            100% {
+                transform: translateX(var(--sway-amount)) rotate(10deg);
+            }
+        }
+        
+        .bloom-flower {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+            will-change: transform, top;
+            animation-fill-mode: forwards;
+        }
+        
+        /* تعديلات واجهة اللعبة في وضع الزهور */
+        .bloom-mode .game-container {
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.5);
+        }
+        
+        .bloom-mode .stats-container {
+            background: rgba(255, 182, 193, 0.8);
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+        }
+        
+        .bloom-mode .stat-value {
+            color: #ff1493;
+        }
+        
+        .bloom-mode button {
+            background: linear-gradient(to right, #ff69b4, #ff1493) !important;
+        }
+        
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        @keyframes sway {
+            0% { transform: translateX(0) rotate(0deg); }
+            50% { transform: translateX(var(--sway)) rotate(10deg); }
+            100% { transform: translateX(calc(-1 * var(--sway))) rotate(-10deg); }
+        }
+        .game-container {
+            position: relative;
+            z-index: 10;
+            background-color: white; /* لضمان عدم رؤية الورود خلفها */
+            box-shadow: 0 0 20px rgba(0,0,0,0.2); /* لإبراز الحدود */
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>احسن من لعبه الانستقرام 🤓</h1>
+    </div>
+    
+    <div class="game-wrapper">
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">النقاط</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">أعلى نتيجة</div>
+                <div class="stat-value" id="highScore">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">المستوى</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+        </div>
+        <div class="bloom-mode-overlay" id="bloomModeOverlay"></div>
+
+        
+        <div class="game-container">
+            <div class="speed-mode" id="speedMode">وضع الغششش👩‍💻20x!</div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
+         
+        <!-- أضف هذا داخل game-wrapper بعد game-container -->
+        
+        
+        <div class="cheat-code-container">
+            <input type="text" id="cheatCodeInput" placeholder="">
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">بدء اللعبة</button>
+            <button id="resetBtn">إعادة تشغيل</button>
+        </div>
+        
+        
+    </div>
+    <!-- أضف هذا قبل إغلاق body -->
+<div id="flowers-container"></div>
+    
+    <script>
+        // عناصر DOM
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        const levelElement = document.getElementById('level');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const cheatCodeInput = document.getElementById('cheatCodeInput');
+        const speedModeElement = document.getElementById('speedMode');
+        const BLOOM_CODE = "bloom";
+      
+
+        // ضبط حجم الكانفاس
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+        
+        // إعدادات اللعبة
+        const emojis = ['😀', '😂', '🤩', '😎', '🤪', '👽', '🤖', '👾', '🐶', '🦄', '🍕', '⚽', '🏀', '🎮', '🚀'];
+        const CHEAT_CODE = "تف";
+        let score = 0;
+        let highScore = localStorage.getItem('emojiBounceHighScore') || 0;
+        let level = 1;
+        let gameRunning = false;
+        let animationId;
+        let speedMode = false;
+        let originalSpeed = 0;
+        let bloomMode = false;
+        let bloomParticles = [];
+        let flowerInterval;
+        let touchStartX = 0;
+let isDragging = false;
+          // أولاً: أضف هذا الكود مع المتغيرات العامة في الأعلى
+          const flowers = ['🌸', '🌹', '🌺', '🌻', '🌼', '🌷', '💐', '🏵️'];
+          let flowerParticles = [];
+          let lastFlowerTime = 0;
+        // تحديث واجهة المستخدم
+        highScoreElement.textContent = highScore;
+        
+        // كائن الإيموجي
+        const emoji = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: Math.min(canvas.width, canvas.height) * 0.05,
+            dx: 0,
+            dy: 0,
+            speed: Math.min(canvas.width, canvas.height) * 0.007,
+            currentEmoji: emojis[0],
+            color: getRandomColor(),
+            changeEmoji() {
+                this.currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                this.color = getRandomColor();
+            }
+        };
+        
+        // كائن اللاعب
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - Math.min(canvas.width, canvas.height) * 0.05,
+            width: Math.min(canvas.width, canvas.height) * 0.2,
+            height: Math.min(canvas.width, canvas.height) * 0.02,
+            speed: Math.min(canvas.width, canvas.height) * 0.015,
+            dx: 0,
+            color: '#6a11cb'
+        };
+        
+        // كائنات الهدف
+        const targets = [];
+        
+        function createTargets() {
+            targets.length = 0;
+            const rows = 3 + Math.floor(level / 2);
+            const cols = 5 + Math.floor(level / 3);
+            const padding = canvas.width * 0.03;
+            const targetWidth = (canvas.width - (cols + 1) * padding) / cols;
+            const targetHeight = canvas.height * 0.03;
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    targets.push({
+                        x: padding + j * (targetWidth + padding),
+                        y: padding + i * (targetHeight + padding),
+                        width: targetWidth,
+                        height: targetHeight,
+                        color: getRandomColor(),
+                        visible: true,
+                        points: 10 + Math.floor(i * 2)
+                    });
+                }
+            }
+        }
+        function createFlowerParticle() {
+            if (!bloomMode) return;
+            
+            const now = Date.now();
+            if (now - lastFlowerTime < 200) return; // إنشاء وردة كل 200 مللي ثانية
+            lastFlowerTime = now;
+            
+            const flower = {
+                x: Math.random() * canvas.width,
+                y: -30,
+                emoji: flowers[Math.floor(Math.random() * flowers.length)],
+                size: 20 + Math.random() * 20,
+                speed: 1 + Math.random() * 3,
+                sway: Math.random() * 4 - 2,
+                swaySpeed: 0.05 + Math.random() * 0.1,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1,
+                opacity: 0.7 + Math.random() * 0.3
+            };
+            
+            flowerParticles.push(flower);
+
+        }
+
+    
+        function createFlower() {
+            if (!bloomMode) return;
+            
+            const flower = document.createElement('div');
+            flower.className = 'bloom-flower';
+            flower.textContent = flowers[Math.floor(Math.random() * flowers.length)];
+            
+            // خصائص الوردة
+            const size = 20 + Math.random() * 30;
+            const left = Math.random() * 100;
+            const duration = 5 + Math.random() * 10;
+            const delay = 0; // لا نستخدم تأخير الآن
+            const opacity = 0.7 + Math.random() * 0.3;
+            const swayAmount = 50 + Math.random() * 100;
+            
+            flower.style.cssText = `
+                left: ${left}vw;
+                top: -50px;
+                font-size: ${size}px;
+                opacity: ${opacity};
+                transform: rotate(${Math.random() * 360}deg);
+                animation: 
+                    falling ${duration}s linear forwards,
+                    sway ${duration/2}s ease-in-out infinite alternate;
+                --sway-amount: ${swayAmount}px;
+            `;
+            
+            document.body.appendChild(flower);
+            
+            // إزالة الوردة بعد سقوطها
+            setTimeout(() => {
+                if (flower.parentNode) {
+                    flower.remove();
+                }
+            }, duration * 1000);
+        }
+        
+        
+        function updateFlowerParticles() {
+            // إزالة الجزيئات التي خرجت من الشاشة
+            flowerParticles = flowerParticles.filter(flower => flower.y < canvas.height + 50);
+            
+            // تحديث مواقع الجزيئات
+            flowerParticles.forEach(flower => {
+                flower.y += flower.speed;
+                flower.x += Math.sin(Date.now() * flower.swaySpeed) * flower.sway * 0.3;
+                flower.rotation += flower.rotationSpeed;
+            });
+        }
+        
+        function drawFlowerParticles() {
+            flowerParticles.forEach(flower => {
+                ctx.save();
+                ctx.translate(flower.x, flower.y);
+                ctx.rotate(flower.rotation);
+                ctx.globalAlpha = flower.opacity;
+                ctx.font = `${flower.size}px Arial`;
+                ctx.fillText(flower.emoji, -flower.size/2, flower.size/2);
+                ctx.restore();
+            });
+        }
+        
+        
+        // تفعيل الوضع السري
+        function activateSpeedMode() {
+            if (speedMode) return;
+            if (!gameRunning) {
+                startGame();
+            }
+            speedMode = true;
+            originalSpeed = emoji.speed;
+            emoji.speed *= 8; // خفضنا من 20x إلى 5x لتجنب المشاكل
+            player.speed *= 8; // زيادة معقولة لسرعة اللاعب
+            speedModeElement.style.display = 'block';
+            
+            // ضبط سرعة الإيموجي لتبقى ضمن الحدود المعقولة
+            const maxSpeed = Math.min(canvas.width, canvas.height) * 0.03;
+            emoji.dx = Math.min(Math.max(emoji.dx, -maxSpeed), maxSpeed);
+            emoji.dy = Math.min(Math.max(emoji.dy, -maxSpeed), maxSpeed);
+            
+            // تأثيرات بصرية
+            document.body.style.animation = 'none';
+            setTimeout(() => {
+                document.body.style.animation = 'pulseBackground 0.1s infinite alternate';
+            }, 10);
+            
+            // إخفاء الرسالة بعد 5 ثواني
+            setTimeout(() => {
+                speedModeElement.style.display = 'none';
+            }, 5000);
+            
+            // إيقاف الوضع السري تلقائياً بعد 30 ثانية
+            setTimeout(() => {
+                deactivateSpeedMode();
+                speedModeElement.textContent = " انتهى الغشش تففف 😂😂!";
+                speedModeElement.style.display = 'block';
+                setTimeout(() => {
+                    speedModeElement.style.display = 'none';
+                }, 2000);
+            }, 120000);
+        }
+        // تعطيل الوضع السري
+        function deactivateSpeedMode() {
+            if (!speedMode) return;
+            
+            speedMode = false;
+            emoji.speed = originalSpeed;
+            player.speed = Math.min(canvas.width, canvas.height) * 0.015;
+            document.body.style.animation = 'none';
+            
+            // ضبط سرعة الإيموجي عند الخروج من الوضع السري
+            const normalMaxSpeed = Math.min(canvas.width, canvas.height) * 0.01;
+            emoji.dx = Math.min(Math.max(emoji.dx, -normalMaxSpeed), normalMaxSpeed);
+            emoji.dy = Math.min(Math.max(emoji.dy, -normalMaxSpeed), normalMaxSpeed);
+        }
+
+        function activateBloomMode() {
+            if (bloomMode) return;
+    
+    bloomMode = true;
+    document.body.classList.add('bloom-mode');
+    scoreMultiplier = 10;
+    player.color = '#ff69b4';
+    
+    // بدء إنشاء مطر الورود
+    flowerInterval = setInterval(createFlower, 200);
+    
+    // تأثير صوتي (اختياري)
+    new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3').play();
+
+        }
+        
+        function deactivateBloomMode() {
+            if (!bloomMode) return;
+    
+    bloomMode = false;
+    document.body.classList.remove('bloom-mode');
+    scoreMultiplier = 1;
+    player.color = '#6a11cb';
+    
+    // إيقاف مطر الورود وإزالة جميع الورود
+    clearInterval(flowerInterval);
+    document.querySelectorAll('.bloom-flower').forEach(flower => flower.remove());
+        }
+            
+            function createBloomParticle() {
+                if (!bloomMode) return;
+                
+                const particle = document.createElement('div');
+                particle.className = 'bloom-particle';
+                particle.style.left = Math.random() * canvas.width + 'px';
+                particle.style.top = '-20px';
+                particle.style.transform = `scale(${0.5 + Math.random()})`;
+                particle.style.opacity = 0.5 + Math.random() * 0.5;
+                
+                document.querySelector('.game-container').appendChild(particle);
+                bloomParticles.push({
+                    element: particle,
+                    x: parseFloat(particle.style.left),
+                    y: -20,
+                    speed: 2 + Math.random() * 3,
+                    sway: Math.random() * 4 - 2
+                });
+            }
+        
+        function updateBloomParticles() {
+            bloomParticles.forEach((particle, index) => {
+                particle.y += particle.speed;
+                particle.x += particle.sway * 0.1;
+                
+                particle.element.style.top = particle.y + 'px';
+                particle.element.style.left = particle.x + 'px';
+                
+                if (particle.y > canvas.height) {
+                    particle.element.remove();
+                    bloomParticles.splice(index, 1);
+                }
+            });
+        }
+        /*000000000000000000000000000000000*/
+        function update() {
+            // ... (ابقى بداية الدالة كما هي) ...
+
+          // في دالة update():
+// الاصطدام بالجدران
+const bounceReduction = 0.98; // تقليل السرعة عند الارتداد
+
+if (bloomMode) {
+    createFlowerParticle();
+    updateFlowerParticles()
+   
+}
+// الاصطدام بالجدران الجانبية
+if (emoji.x + emoji.radius > canvas.width) {
+    emoji.x = canvas.width - emoji.radius - 1; // تأكد من بقائه داخل الحدود
+    emoji.dx = -Math.abs(emoji.dx * bounceReduction); // تأكد من الاتجاه المعاكس
+    emoji.changeEmoji();
+    
+    // إضافة تغيير طفيف في الزاوية لمنع التكرار
+    emoji.dy += (Math.random() - 0.5) * 0.5;
+} 
+else if (emoji.x - emoji.radius < 0) {
+    emoji.x = emoji.radius + 1; // تأكد من بقائه داخل الحدود
+    emoji.dx = Math.abs(emoji.dx * bounceReduction); // تأكد من الاتجاه المعاكس
+    emoji.changeEmoji();
+    
+    // إضافة تغيير طفيف في الزاوية لمنع التكرار
+    emoji.dy += (Math.random() - 0.5) * 0.5;
+}
+// في قسم اصطدام الإيموجي باللاعب:
+const hitPosition = (emoji.x - (player.x - player.width / 2)) / player.width;
+const angle = hitPosition * Math.PI - Math.PI/2;
+
+// إضافة عنصر عشوائي صغير لزاوية الارتداد
+const randomFactor = 0.1 + Math.random() * 0.1;
+emoji.dx = emoji.speed * Math.cos(angle) * (1.3 + randomFactor);
+emoji.dy = -Math.abs(emoji.speed * Math.sin(angle) * (0.9 + randomFactor));
+// الاصطدام بالسقف
+if (emoji.y - emoji.radius < 0) {
+    emoji.y = emoji.radius + 1;
+    emoji.dy = Math.abs(emoji.dy * bounceReduction);
+    emoji.changeEmoji();
+    
+    // إضافة تغيير طفيف في الزاوية لمنع التكرار
+    emoji.dx += (Math.random() - 0.5) * 0.5;
+}
+
+// كشف حالات التعلق المحتملة
+if (Math.abs(emoji.dx) < 0.3 && Math.abs(emoji.dy) < 0.3) {
+    // إذا كانت السرعة منخفضة جداً ولمس أحد الجدران
+    const nearLeftWall = emoji.x - emoji.radius < 5;
+    const nearRightWall = emoji.x + emoji.radius > canvas.width - 5;
+    
+    if (nearLeftWall || nearRightWall) {
+        // تطبيق دفعة خفيفة عشوائية
+        emoji.dx = (Math.random() - 0.5) * emoji.speed * 0.5;
+        emoji.dy = -Math.abs((Math.random() + 0.5) * emoji.speed * 0.5);
+    }
+}
+
+        }
+
+        // وظائف المساعدة
+        function getRandomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 70%, 60%)`;
+        }
+        
+        function drawEmoji() {
+            ctx.font = `${emoji.radius * 1.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (speedMode) {
+                // تأثير الوضع السري
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'gold';
+                ctx.fillStyle = 'white';
+            } else {
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'black';
+            }
+            
+            ctx.fillText(emoji.currentEmoji, emoji.x, emoji.y);
+            ctx.shadowBlur = 0;
+        }
+        
+        function drawPlayer() {
+            ctx.beginPath();
+            ctx.roundRect(
+                player.x - player.width / 2, 
+                player.y - player.height / 2, 
+                player.width, 
+                player.height, 
+                [player.height]
+            );
+            if (bloomMode) {
+                ctx.fillStyle = player.color;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(255, 105, 180, 0.7)';
+            } else if(speedMode) {
+                ctx.fillStyle = 'gold';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(255,215,0,0.7)';
+            } else {
+                ctx.fillStyle = player.color;   
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function drawTargets() {
+            targets.forEach(target => {
+                if (target.visible) {
+                    ctx.beginPath();
+                    ctx.roundRect(target.x, target.y, target.width, target.height, [5]);
+                    
+                    if (speedMode) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                    } else {
+                        ctx.fillStyle = target.color;
+                    }
+                    
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    // رسم النقاط داخل الهدف
+                    ctx.fillStyle = speedMode ? 'black' : 'white';
+                    ctx.font = `${target.height * 0.6}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(target.points, target.x + target.width / 2, target.y + target.height / 2);
+                }
+            });
+        }
+        
+        function drawBackground() {
+            // خلفية متدرجة
+            let gradient;
+            if (bloomMode) {
+                drawFlowerParticles();
+                // خلفية وردية للوضع الزهور
+                ctx.fillStyle = '#fff0f5';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // رسم شبكة وردية
+                ctx.strokeStyle = 'rgba(255, 182, 193, 0.3)';
+            } else if(speedMode) {
+                gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#ff0000');
+                gradient.addColorStop(0.5, '#ffff00');
+                gradient.addColorStop(1, '#00ff00');
+            } else {
+                gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#f8f9fa');
+                gradient.addColorStop(1, '#e9ecef');
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // شبكة خفيفة
+            ctx.strokeStyle = speedMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = speedMode ? 10 : 20;
+            
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        
+
+function update() {
+    // مسح الكانفاس
+    drawBackground();
+    
+    // رسم العناصر
+    drawTargets();
+    drawPlayer();
+    drawEmoji();
+    
+    // تحريك الإيموجي مع ضبط السرعة القصوى
+    const maxSpeed = speedMode ? 
+        Math.min(canvas.width, canvas.height) * 0.03 : 
+        Math.min(canvas.width, canvas.height) * 0.015;
+    
+    emoji.dx = Math.max(-maxSpeed, Math.min(maxSpeed, emoji.dx));
+    emoji.dy = Math.max(-maxSpeed, Math.min(maxSpeed, emoji.dy));
+    
+    emoji.x += emoji.dx;
+    emoji.y += emoji.dy;
+    
+    // نظام الاصطدام المحسن
+    handleCollisions();
+    
+    // تحريك اللاعب وضبط الحدود
+    player.x += player.dx;
+    player.x = Math.max(player.width/2, Math.min(canvas.width - player.width/2, player.x));
+    
+    // كشف النهاية (فوز/خسارة)
+    checkGameEnd();
+    
+    // استمرار اللعبة
+    if (gameRunning) {
+        animationId = requestAnimationFrame(update);
+    }
+}
+
+function handleCollisions() {
+    const bounceDamping = 1.5; // تقليل السرعة عند الارتداد
+    
+    // الاصطدام بالجدران الجانبية
+    if (emoji.x + emoji.radius > canvas.width) {
+        emoji.x = canvas.width - emoji.radius - 1;
+        emoji.dx = -Math.abs(emoji.dx * bounceDamping);
+        addRandomBounceVariation();
+        emoji.changeEmoji();
+    } 
+    else if (emoji.x - emoji.radius < 0) {
+        emoji.x = emoji.radius + 1;
+        emoji.dx = Math.abs(emoji.dx * bounceDamping);
+        addRandomBounceVariation();
+        emoji.changeEmoji();
+    }
+    
+    // الاصطدام بالسقف
+    if (emoji.y - emoji.radius < 0) {
+        emoji.y = emoji.radius + 1;
+        emoji.dy = Math.abs(emoji.dy * bounceDamping);
+        addRandomBounceVariation();
+        emoji.changeEmoji();
+    }
+    
+    // الاصطدام باللاعب
+    if (isCollidingWithPlayer()) {
+        handlePlayerCollision();
+    }
+    
+    // الاصطدام بالأهداف
+    targets.forEach((target, index) => {
+        if (target.visible && isCollidingWithTarget(target)) {
+            handleTargetCollision(target, index);
+        }
+    });
+    
+    // منع التعلق بين الجدران
+    preventInfiniteBouncing();
+}
+
+function isCollidingWithPlayer() {
+    return emoji.y + emoji.radius > player.y - player.height/2 &&
+           emoji.y - emoji.radius < player.y + player.height/2 &&
+           emoji.x > player.x - player.width/2 &&
+           emoji.x < player.x + player.width/2;
+}
+
+function handlePlayerCollision() {
+    const hitPosition = (emoji.x - (player.x - player.width/2)) / player.width;
+    const angle = hitPosition * Math.PI - Math.PI/2;
+    const randomFactor = 0.1 + Math.random() * 0.2;
+    
+    emoji.dx = emoji.speed * Math.cos(angle) * (1.3 + randomFactor);
+    emoji.dy = -Math.abs(emoji.speed * Math.sin(angle) * (0.9 + randomFactor));
+    emoji.changeEmoji();
+}
+
+function isCollidingWithTarget(target) {
+    return emoji.x + emoji.radius > target.x &&
+           emoji.x - emoji.radius < target.x + target.width &&
+           emoji.y - emoji.radius < target.y + target.height &&
+           emoji.y + emoji.radius > target.y;
+}
+
+function handleTargetCollision(target, index) {
+    target.visible = false;
+    emoji.dy = -emoji.dy;
+    score += target.points * (speedMode ? 2 : 1);
+    scoreElement.textContent = score;
+    emoji.changeEmoji();
+    
+    if (!speedMode) {
+        emoji.speed *= 1.01;
+    }
+}
+
+function addRandomBounceVariation() {
+    // إضافة تغيير طفيف في الزاوية لمنع التكرار
+    const variation = 0.3;
+    emoji.dx += (Math.random() - 0.5) * variation;
+    emoji.dy += (Math.random() - 0.5) * variation;
+}
+
+function preventInfiniteBouncing() {
+    // كشف حالات التعلق المحتملة
+    const isTooSlow = Math.abs(emoji.dx) < 0.3 && Math.abs(emoji.dy) < 0.3;
+    const nearWall = emoji.x - emoji.radius < 5 || emoji.x + emoji.radius > canvas.width - 5;
+    
+    if (isTooSlow && nearWall) {
+        // تطبيق دفعة خفيفة عشوائية
+        emoji.dx = (Math.random() - 0.5) * emoji.speed;
+        emoji.dy = -Math.abs((Math.random() + 0.3) * emoji.speed);
+    }
+    
+    // تطبيق احتكاك صغير جداً لمنع الحركة اللانهائية
+    if (!speedMode) {
+        emoji.dx *= 0.999;
+        emoji.dy *= 0.999; 
+    }
+}
+
+function checkGameEnd() {
+    // الخسارة في الوضع العادي
+    if (!speedMode && emoji.y + emoji.radius > canvas.height) {
+        gameOver();
+        return;
+    }
+    
+    // الارتداد في الوضع السري
+    if (speedMode && emoji.y + emoji.radius > canvas.height) {
+        emoji.y = canvas.height - emoji.radius;
+        emoji.dy = -Math.abs(emoji.dy * 0.9);
+        emoji.changeEmoji();
+    }
+    
+    // الفوز عند تدمير جميع الأهداف
+    if (targets.every(target => !target.visible)) {
+        levelUp();
+    }
+}
+
+        
+        function levelUp() {
+            level++;
+            levelElement.textContent = level;
+            
+            // زيادة صعوبة اللعبة
+            if (!speedMode) {
+                emoji.speed *= 1.1;
+            }
+            player.width *= 0.95; // تصغير حجم اللاعب
+            
+            // إعادة تعيين موضع الإيموجي واللاعب
+            emoji.x = canvas.width / 2;
+            emoji.y = canvas.height / 3;
+            emoji.dx = emoji.speed * (Math.random() > 0.5 ? 1 : -1);
+            emoji.dy = emoji.speed;
+            
+            player.x = canvas.width / 2;
+            
+            createTargets();
+            update();
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            deactivateSpeedMode();
+            
+            // حفظ أعلى نتيجة
+            if (score > highScore) {
+                highScore = score;
+                highScoreElement.textContent = highScore;
+                localStorage.setItem('emojiBounceHighScore', highScore);
+            }
+            
+            // عرض رسالة النهاية
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${canvas.width * 0.08}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('انتهت اللعبة!', canvas.width / 2, canvas.height / 2 - 40);
+            
+            ctx.font = `${canvas.width * 0.05}px Arial`;
+            ctx.fillText(`النقاط: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+            
+            if (score > highScore) {
+                ctx.fillStyle = 'gold';
+                ctx.font = `bold ${canvas.width * 0.06}px Arial`;
+                ctx.fillText('🎉 رقم قياسي جديد! 🎉', canvas.width / 2, canvas.height / 2 + 70);
+            }
+            
+            startBtn.textContent = 'إعادة المحاولة';
+        }
+        
+        function startGame() {
+            if (gameRunning) return;
+            
+        
+    
+   
+            // إعادة تعيين اللعبة
+            score = 0;
+            scoreElement.textContent = score;
+            level = 1;
+            levelElement.textContent = level;
+            deactivateSpeedMode();
+            
+            // إعادة تعيين الإيموجي
+            emoji.x = canvas.width / 2;
+            emoji.y = canvas.height / 3;
+            emoji.radius = Math.min(canvas.width, canvas.height) * 0.05;
+            emoji.speed = Math.min(canvas.width, canvas.height) * 0.007;
+            emoji.dx = emoji.speed * (Math.random() > 0.5 ? 1 : -1);
+            emoji.dy = emoji.speed;
+            emoji.changeEmoji();
+            
+            // إعادة تعيين اللاعب
+            player.width = Math.min(canvas.width, canvas.height) * 0.2;
+            player.height = Math.min(canvas.width, canvas.height) * 0.02;
+            player.speed = Math.min(canvas.width, canvas.height) * 0.015;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - Math.min(canvas.width, canvas.height) * 0.05;
+            player.dx = 0;
+            setupUniversalControls();//0000000000000000000000000
+            createTargets();
+            gameRunning = true;
+            startBtn.textContent = 'جاري اللعب...';
+            update();
+        }
+        
+        function resetGame() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            deactivateSpeedMode(); 
+            deactivateBloomMode();
+            startBtn.textContent = 'بدء اللعبة';
+            
+            // إعادة رسم الشاشة الرئيسية
+            drawBackground();
+            drawPlayer();
+            
+            ctx.fillStyle = '#6a11cb';
+            ctx.font = `bold ${canvas.width * 0.06}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('إضغط "بدء اللعبة" للبدء!', canvas.width / 2, canvas.height / 2);
+        }
+        //00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+        function setupUniversalControls() {
+            // للحاسوب - لوحة المفاتيح
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') player.dx = player.speed;
+                if (e.key === 'ArrowLeft') player.dx = -player.speed;
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (['ArrowRight', 'ArrowLeft'].includes(e.key)) player.dx = 0;
+            });
+        
+            // للهاتف - اللمس
+            const gameArea = document.getElementById('gameCanvas');
+            let touchStartX = 0;
+            
+            gameArea.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                e.preventDefault();
+            });
+            
+            gameArea.addEventListener('touchmove', (e) => {
+                const touchX = e.touches[0].clientX;
+                player.dx = (touchX - touchStartX) * 0.3;
+                touchStartX = touchX;
+                e.preventDefault();
+            });
+            
+            gameArea.addEventListener('touchend', () => {
+                player.dx = 0;
+            });
+        }
+     
+        // التحقق من الرمز السري
+        cheatCodeInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                if (cheatCodeInput.value === CHEAT_CODE) {
+                    activateSpeedMode();
+                } else if (cheatCodeInput.value === BLOOM_CODE) {
+                    activateBloomMode();
+                }
+                cheatCodeInput.value = '';
+                cheatCodeInput.placeholder = 'تم تفعيل الوضع المطلوب!';
+                setTimeout(() => {
+                    cheatCodeInput.placeholder = 'أدخل الرمز السري...';
+                }, 2000);
+            }
+        });
+        
+        
+        // إضافة مستمعي الأحداث
+       
+        startBtn.addEventListener('click', startGame);
+        resetBtn.addEventListener('click', resetGame);
+        
+        // تغيير الإيموجي كل ثانية
+        setInterval(() => {
+            if (gameRunning) {
+                emoji.changeEmoji();
+            }
+        }, 1000);
+        
+        // تهيئة اللعبة
+        resizeCanvas();
+        resetGame();
+        
+        // إضافة تأثيرات CSS للوضع السري
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulseBackground {
+                from { background: linear-gradient(to right, #ff0000, #ff6b6b); }
+                to { background: linear-gradient(to right, #ff6b6b, #ff0000); }
+            }
+        `;
+        document.head.appendChild(style);
+
+       
+    </script>
+</body>
+</html>
