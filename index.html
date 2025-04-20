@@ -625,7 +625,9 @@
 
         function activateBloomMode() {
             if (bloomMode) return;
-    
+          if (!gameRunning) {
+        startGame();
+    }
     bloomMode = true;
     document.body.classList.add('bloom-mode');
     scoreMultiplier = 10;
