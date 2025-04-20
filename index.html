@@ -347,7 +347,7 @@
             <div class="stat-box">
                 <div class="stat-label">أعلى نتيجة</div>
                 <div class="stat-value" id="highScore">0</div>
-            </div>
+            </div> 
             <div class="stat-box">
                 <div class="stat-label">المستوى</div>
                 <div class="stat-value" id="level">1</div>
@@ -359,7 +359,7 @@
         <div class="game-container">
             <div class="speed-mode" id="speedMode">وضع الغششش👩‍💻20x!</div>
             <canvas id="gameCanvas"></canvas>
-        </div>
+        </div> 
          
         <!-- أضف هذا داخل game-wrapper بعد game-container -->
         
@@ -1164,7 +1164,7 @@ function checkGameEnd() {
             
             gameArea.addEventListener('touchmove', (e) => {
                 const touchX = e.touches[0].clientX;
-                player.dx = (touchX - touchStartX) * 0.3;
+                player.dx = (touchX - touchStartX) * 1.5;
                 touchStartX = touchX;
                 e.preventDefault();
             });
