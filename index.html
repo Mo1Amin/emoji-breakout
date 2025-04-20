@@ -335,6 +335,22 @@
             background-color: white; /* لضمان عدم رؤية الورود خلفها */
             box-shadow: 0 0 20px rgba(0,0,0,0.2); /* لإبراز الحدود */
         }
+        .game-container {
+            touch-action: none; /* لمنع التكبير/التصغير عند اللمس */
+            user-select: none; /* لمنع تحديد النص */
+        }
+        
+        /* تأثير مرئي عند اللمس (اختياري) */
+        .touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+        }
         
     </style>
 </head>
@@ -366,10 +382,7 @@
             <canvas id="gameCanvas"></canvas>
         </div>
 
-        <div class="mobile-controls">
-            <div class="mobile-btn" id="rightBtn">→</div>
-            <div class="mobile-btn" id="leftBtn">←</div>
-        </div>
+
         
         <div class="cheat-code-container">
             <input type="text" id="cheatCodeInput" placeholder="">
@@ -483,6 +496,30 @@
                 }
             }
         }
+         // إعداد مستمعات اللمس
+function setupTouchControls() {
+    const gameArea = document.querySelector('.game-container');
+    
+    gameArea.addEventListener('touchstart', (e) => {
+        isTouching = true;
+        touchStartX = e.touches[0].clientX;
+        e.preventDefault();
+    });
+    
+    gameArea.addEventListener('touchmove', (e) => {
+        if (!isTouching) return;
+        touchMoveX = e.touches[0].clientX;
+        const diff = touchMoveX - touchStartX;
+        player.dx = diff * 0.2; // حساسية الحركة
+        e.preventDefault();
+    });
+    
+    gameArea.addEventListener('touchend', () => {
+        isTouching = false;
+        player.dx = 0;
+    });
+}
+
         function createFlowerParticle() {
             if (!bloomMode) return;
             
@@ -573,9 +610,9 @@
         // تفعيل الوضع السري
         function activateSpeedMode() {
             if (speedMode) return;
-             if (!gameRunning) {
-        startGame();
-    }
+            if (!gameRunning) {
+                startGame();
+            }
             speedMode = true;
             originalSpeed = emoji.speed;
             emoji.speed *= 8; // خفضنا من 20x إلى 5x لتجنب المشاكل
@@ -625,9 +662,7 @@
 
         function activateBloomMode() {
             if (bloomMode) return;
-          if (!gameRunning) {
-        startGame();
-    }
+    
     bloomMode = true;
     document.body.classList.add('bloom-mode');
     scoreMultiplier = 10;
@@ -1097,7 +1132,7 @@ function checkGameEnd() {
         
         function startGame() {
             if (gameRunning) return;
-            
+            setupTouchControls();
             // إعادة تعيين اللعبة
             score = 0;
             scoreElement.textContent = score;
