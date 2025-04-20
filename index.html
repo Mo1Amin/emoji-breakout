@@ -601,6 +601,8 @@ let isDragging = false;
                     speedModeElement.style.display = 'none';
                 }, 2000);
             }, 120000);
+            new Audio('fire.wav').play();
+
         }
         // تعطيل الوضع السري
         function deactivateSpeedMode() {
@@ -629,7 +631,7 @@ let isDragging = false;
     flowerInterval = setInterval(createFlower, 200);
     
     // تأثير صوتي (اختياري)
-    new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3').play();
+    new Audio('rr.wav').play();
 
         }
         
@@ -1034,7 +1036,7 @@ function checkGameEnd() {
         function levelUp() {
             level++;
             levelElement.textContent = level;
-            
+            new Audio('fun.wav').play();
             // زيادة صعوبة اللعبة
             if (!speedMode) {
                 emoji.speed *= 1.1;
@@ -1057,7 +1059,7 @@ function checkGameEnd() {
             gameRunning = false;
             cancelAnimationFrame(animationId);
             deactivateSpeedMode();
-            
+            new Audio('fail.wav').play();
             // حفظ أعلى نتيجة
             if (score > highScore) {
                 highScore = score;
@@ -1091,7 +1093,7 @@ function checkGameEnd() {
             if (gameRunning) return;
             
         
-    
+            new Audio('start.wav').play();
    
             // إعادة تعيين اللعبة
             score = 0;
