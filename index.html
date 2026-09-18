@@ -357,7 +357,7 @@
 
         
         <div class="game-container">
-            <div class="speed-mode" id="speedMode">وضع الغششش👩‍💻20x!</div>
+            <div class="speed-mode" id="speedMode">وضع التيربو ⚡ 20x!</div>
             <canvas id="gameCanvas"></canvas>
         </div> 
          
@@ -404,7 +404,7 @@
         
         // إعدادات اللعبة
         const emojis = ['😀', '😂', '🤩', '😎', '🤪', '👽', '🤖', '👾', '🐶', '🦄', '🍕', '⚽', '🏀', '🎮', '🚀'];
-        const CHEAT_CODE = "تف";
+        const TURBO_CODE = "turbo";
         let score = 0;
         let highScore = localStorage.getItem('emojiBounceHighScore') || 0;
         let level = 1;
@@ -595,7 +595,7 @@ let isDragging = false;
             // إيقاف الوضع السري تلقائياً بعد 30 ثانية
             setTimeout(() => {
                 deactivateSpeedMode();
-                speedModeElement.textContent = " انتهى الغشش تففف 😂😂!";
+                speedModeElement.textContent = "انتهى وضع التيربو ⚡";
                 speedModeElement.style.display = 'block';
                 setTimeout(() => {
                     speedModeElement.style.display = 'none';
@@ -1179,13 +1179,17 @@ function checkGameEnd() {
         // التحقق من الرمز السري
         cheatCodeInput.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') {
-                if (cheatCodeInput.value === CHEAT_CODE) {
+                const code = cheatCodeInput.value.trim().toLowerCase();
+                let matched = true;
+                if (code === TURBO_CODE) {
                     activateSpeedMode();
-                } else if (cheatCodeInput.value === BLOOM_CODE) {
+                } else if (code === BLOOM_CODE) {
                     activateBloomMode();
+                } else {
+                    matched = false;
                 }
                 cheatCodeInput.value = '';
-                cheatCodeInput.placeholder = 'تم تفعيل الوضع المطلوب!';
+                cheatCodeInput.placeholder = matched ? 'تم تفعيل الوضع المطلوب!' : 'رمز غير صحيح، جرّب تاني';
                 setTimeout(() => {
                     cheatCodeInput.placeholder = 'أدخل الرمز السري...';
                 }, 2000);
