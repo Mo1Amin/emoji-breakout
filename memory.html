@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d0e12">
   <title data-t="memory.pageTitle">Emoji Memory</title>
@@ -81,6 +83,7 @@
   <header class="topbar">
     <a class="icon-btn" href="./" data-back data-t-label="back"></a>
     <h1><span aria-hidden="true">🧠</span><span data-t="memory.title">Emoji Memory</span></h1>
+    <span class="net-badge" id="netBadge" hidden></span>
     <button class="icon-btn" id="levelsBtn" data-t-label="memory.levels">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
     </button>
@@ -88,7 +91,12 @@
     <button class="icon-btn" data-action="lang"></button>
   </header>
 
-  <section class="hud">
+  <section class="players" id="players" hidden>
+    <div class="player p1" id="p1"><span class="token">🍓</span><span><span class="name"></span><span class="score">0</span></span></div>
+    <div class="player p2" id="p2"><span class="token">🍋</span><span><span class="name"></span><span class="score">0</span></span></div>
+  </section>
+
+  <section class="hud" id="hud">
     <div class="stat"><small data-t="memory.level">Level</small><b id="hudLevel">1/8</b></div>
     <div class="stat"><small data-t="memory.moves">Moves</small><b id="hudMoves">0</b></div>
     <div class="stat"><small data-t="memory.time">Time</small><b id="hudTime">0:00</b></div>
