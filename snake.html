@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e12">
+  <title data-t="snake.pageTitle">Snake Together</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/arcade.css">
+  <style>
+    .game-page { --game: var(--snake); overscroll-behavior: none; }
+    .board-wrap { max-width: none; }
+    .stat[hidden] { display: none; }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 76px);
+      grid-template-rows: repeat(2, 64px);
+      gap: 8px;
+      direction: ltr;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .dpad[hidden] { display: none; }
+    .dpad button {
+      border-radius: 18px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      touch-action: none;
+    }
+    .dpad button:active { background: var(--you, var(--game)); color: #10130f; }
+    .dpad svg { width: 26px; height: 26px; }
+    .dpad [data-dir="U"] { grid-column: 2; grid-row: 1; }
+    .dpad [data-dir="L"] { grid-column: 1; grid-row: 2; }
+    .dpad [data-dir="D"] { grid-column: 2; grid-row: 2; }
+    .dpad [data-dir="R"] { grid-column: 3; grid-row: 2; }
+
+    .hint { color: var(--muted); font-size: 14px; text-align: center; margin: 0; }
+    @media (pointer: coarse) { .hint { display: none; } }
+
+    .level-card { max-width: 380px; max-height: 100%; overflow: auto; }
+    .level-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 4px 0; }
+    .level-btn {
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: var(--surface-2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      transition: transform .15s ease;
+    }
+    .level-btn:active { transform: scale(.94); }
+    .level-btn:disabled { opacity: .4; cursor: default; }
+    .lv-emoji { font-size: 22px; }
+    .lv-num { font-size: 12px; font-weight: 800; color: var(--muted); }
+  </style>
+</head>
+<body class="game-page">
+  <header class="topbar">
+    <a class="icon-btn" href="./" data-back data-t-label="back"></a>
+    <h1><span aria-hidden="true">🐍</span><span data-t="snake.title">Snake Together</span></h1>
+    <button class="icon-btn" id="pauseBtn" data-t-label="pause" aria-label="Pause">
+      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>
+    </button>
+    <button class="icon-btn" data-action="sound"></button>
+    <button class="icon-btn" data-action="lang"></button>
+  </header>
+
+  <section class="hud" aria-live="off">
+    <div class="stat"><small data-t="snake.level">Level</small><b id="hudLevel">1/20</b></div>
+    <div class="stat"><small data-t="snake.goal">Goal</small><b id="hudGoal">0/5</b></div>
+    <div class="stat"><small data-t="snake.lives">Lives</small><b id="hudLives">❤️ 3</b></div>
+    <div class="stat"><small data-t="score">Score</small><b id="hudScore">0</b></div>
+    <div class="stat" id="hudTimeBox" hidden><small data-t="snake.time">Time</small><b id="hudTime">0</b></div>
+  </section>
+
+  <div class="board-wrap" id="boardWrap">
+    <canvas id="board" aria-label="Snake board"></canvas>
+    <span class="net-badge floating" id="netBadge" hidden></span>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <p class="hint" data-t="snake.keysHint">Arrows or WASD to steer · P to pause</p>
+
+  <div class="dpad" id="dpad" hidden>
+    <button data-dir="U" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+    <button data-dir="L" aria-label="Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+    <button data-dir="D" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button data-dir="R" aria-label="Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>
+
+  <script type="module" src="js/snake/main.js"></script>
+</body>
+</html>
