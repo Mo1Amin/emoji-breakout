@@ -2,11 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d0e12">
-  <meta name="description" content="Emoji Arcade: Breakout, co-op online Snake with 20 levels, online Four in a Row and Memory. Plays in the browser, made for phones.">
-  <title data-t="hub.pageTitle">Emoji Arcade</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <meta name="description" content="Playto: six emoji games you can play online with a friend. Co-op Snake with 20 levels, Four in a Row, Air Hockey, Odd One Out, Breakout and Memory.">
+  <title data-t="hub.pageTitle">Playto · Play together</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap">
@@ -31,16 +33,27 @@
       z-index: -1;
     }
     .hero-copy { text-align: center; max-width: 620px; }
-    .hero h1 {
+    .wordmark {
       margin: 0;
-      font-size: clamp(52px, 15vw, 112px);
+      font-size: clamp(80px, 24vw, 172px);
       font-weight: 800;
-      line-height: 0.95;
-      letter-spacing: -0.02em;
-      text-shadow: 0 2px 24px var(--bg);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      direction: ltr;
+      opacity: 0;
+      animation: reveal 0.6s ease 3.5s forwards;
     }
-    .hero h1 .accent { color: var(--accent); display: block; }
-    .hero p {
+    .wordmark.formed { opacity: 1; animation: none; transition: opacity 0.6s ease; }
+    @keyframes reveal { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .wordmark { opacity: 1; animation: none; } }
+    .tagline {
+      margin: 0;
+      color: var(--accent);
+      font-size: clamp(28px, 8vw, 44px);
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .hero .lead {
       margin: 18px auto 0;
       max-width: 30ch;
       color: var(--muted);
@@ -57,7 +70,10 @@
       gap: 8px;
       z-index: 10;
     }
+    .brand img { display: block; border-radius: 9px; }
     .brand {
+      color: inherit;
+      text-decoration: none;
       position: absolute;
       top: max(16px, env(safe-area-inset-top));
       inset-inline-start: 16px;
@@ -175,7 +191,7 @@
   </style>
 </head>
 <body>
-  <div class="brand"><span aria-hidden="true">🎮</span><span data-t="hub.brand">Emoji Arcade</span></div>
+  <a class="brand" href="./"><img src="assets/logo.svg" width="32" height="32" alt=""><span data-t="hub.brand">Playto</span></a>
   <div class="corner">
     <button class="icon-btn" data-action="sound"></button>
     <button class="icon-btn" data-action="lang"></button>
@@ -184,8 +200,9 @@
   <header class="hero">
     <canvas id="space" aria-hidden="true"></canvas>
     <div class="hero-copy">
-      <h1><span data-t="hub.title1">Play</span><span class="accent" data-t="hub.title2">together.</span></h1>
-      <p data-t="hub.lead">Four emoji games. Two of them online with a friend, no sign-up, just a room code.</p>
+      <h1 class="wordmark" id="wordmark">Playto</h1>
+      <p class="tagline" data-t="hub.tagline">Play together.</p>
+      <p class="lead" data-t="hub.lead">Six emoji games, every one of them playable online with a friend.</p>
       <a class="btn btn-primary cta" href="#games" data-t="hub.cta">Pick a game</a>
     </div>
   </header>
@@ -212,12 +229,30 @@
         </span>
       </a>
 
+      <a class="game-card" href="hockey.html" data-emoji="🏒" style="--tone: var(--hockey)">
+        <span class="game-icon" aria-hidden="true">🏒</span>
+        <span>
+          <h3 data-t="hockey.title">Air Hockey</h3>
+          <p data-t="hub.hockeyText">Mallet against mallet and a flying emoji puck. First to seven wins.</p>
+          <span class="tags"><span class="tag live" data-t="hub.tagRealtime">Online, real time</span><span class="tag" data-t="hub.tagOneScreen">Two on one screen</span></span>
+        </span>
+      </a>
+
+      <a class="game-card" href="odd.html" data-emoji="👀" style="--tone: var(--odd)">
+        <span class="game-icon" aria-hidden="true">👀</span>
+        <span>
+          <h3 data-t="odd.title">Odd One Out</h3>
+          <p data-t="hub.oddText">Every emoji looks the same except one. Find it before your friend does.</p>
+          <span class="tags"><span class="tag live" data-t="hub.tagRace">Online race</span><span class="tag" data-t="hub.tagFast">Quick rounds</span></span>
+        </span>
+      </a>
+
       <a class="game-card" href="breakout.html" data-emoji="🚀" style="--tone: var(--breakout)">
         <span class="game-icon" aria-hidden="true">🚀</span>
         <span>
           <h3 data-t="breakout.title">Emoji Breakout</h3>
           <p data-t="hub.breakoutText">The original. Bounce an emoji through fruit walls and find the secret codes.</p>
-          <span class="tags"><span class="tag" data-t="hub.tagEndless">Endless levels</span><span class="tag" data-t="hub.tagCodes">Secret codes</span></span>
+          <span class="tags"><span class="tag live" data-t="hub.tagRace">Online race</span><span class="tag" data-t="hub.tagEndless">Endless levels</span><span class="tag" data-t="hub.tagCodes">Secret codes</span></span>
         </span>
       </a>
 
@@ -226,7 +261,7 @@
         <span>
           <h3 data-t="memory.title">Emoji Memory</h3>
           <p data-t="hub.memoryText">Look fast, then find the pairs. Eight boards, from six cards to thirty-six.</p>
-          <span class="tags"><span class="tag" data-t="hub.tag8">8 levels</span><span class="tag" data-t="hub.tagStars">3 stars each</span></span>
+          <span class="tags"><span class="tag live" data-t="hub.tagTurns">Online, turn by turn</span><span class="tag" data-t="hub.tag8">8 levels</span><span class="tag" data-t="hub.tagStars">3 stars each</span></span>
         </span>
       </a>
     </section>
@@ -234,7 +269,7 @@
     <section class="how" aria-labelledby="howTitle">
       <div class="how-box">
         <h2 id="howTitle" data-t="hub.howTitle">Playing online</h2>
-        <div class="how-step"><b>1</b><span data-t="hub.how1">Open Snake or Four in a Row and tap “Create a room”.</span></div>
+        <div class="how-step"><b>1</b><span data-t="hub.how1">Open any game and tap “Create a room”.</span></div>
         <div class="how-step"><b>2</b><span data-t="hub.how2">Send the four-letter code or the link to your friend.</span></div>
         <div class="how-step"><b>3</b><span data-t="hub.how3">They tap “Join with a code”, and you are playing phone to phone.</span></div>
       </div>
