@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e12">
+  <title data-t="memory.pageTitle">Emoji Memory</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/arcade.css">
+  <style>
+    .game-page { --game: var(--memory); }
+    .table { position: relative; width: 100%; max-width: 520px; min-height: 420px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 4), 1fr);
+      gap: clamp(6px, 2vw, 10px);
+      perspective: 900px;
+    }
+    .tile {
+      aspect-ratio: 3 / 4;
+      padding: 0;
+      animation: deal .35s cubic-bezier(.2, .9, .3, 1.2) both;
+    }
+    .tile-inner {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform .38s cubic-bezier(.3, .8, .3, 1);
+    }
+    .tile.flipped .tile-inner { transform: rotateY(180deg); }
+    .tile-back, .tile-front {
+      position: absolute;
+      inset: 0;
+      border-radius: clamp(10px, 3vw, 16px);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: grid;
+      place-items: center;
+    }
+    .tile-back {
+      background: var(--memory);
+      background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.22) 0 18%, transparent 19%);
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,.15);
+    }
+    .tile-front {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      transform: rotateY(180deg);
+      font-size: calc(min(520px, 100vw - 32px) / var(--cols, 4) * .48);
+    }
+    .tile.matched .tile-front { animation: matched .45s ease; background: color-mix(in srgb, var(--memory) 18%, var(--surface)); }
+    .tile.miss .tile-inner { animation: shake .35s ease; }
+    @keyframes deal { from { opacity: 0; transform: translateY(14px) scale(.9); } }
+    @keyframes matched { 50% { transform: rotateY(180deg) scale(1.12); } }
+    @keyframes shake {
+      0%, 100% { transform: rotateY(180deg) translateX(0); }
+      25% { transform: rotateY(180deg) translateX(-6px); }
+      75% { transform: rotateY(180deg) translateX(6px); }
+    }
+    .overlay { position: fixed; }
+    .level-list { display: flex; flex-direction: column; gap: 6px; }
+    .level-row {
+      display: flex; align-items: center; gap: 12px;
+      min-height: 52px; padding: 6px 14px;
+      border-radius: 14px;
+      background: var(--surface-2);
+      text-align: start;
+    }
+    .level-row:disabled { opacity: .45; cursor: default; }
+    .lv-emoji { font-size: 24px; }
+    .lv-name { flex: 1; font-weight: 700; }
+    .lv-stars { color: var(--accent); letter-spacing: 2px; }
+  </style>
+</head>
+<body class="game-page">
+  <header class="topbar">
+    <a class="icon-btn" href="./" data-back data-t-label="back"></a>
+    <h1><span aria-hidden="true">🧠</span><span data-t="memory.title">Emoji Memory</span></h1>
+    <button class="icon-btn" id="levelsBtn" data-t-label="memory.levels">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+    </button>
+    <button class="icon-btn" data-action="sound"></button>
+    <button class="icon-btn" data-action="lang"></button>
+  </header>
+
+  <section class="hud">
+    <div class="stat"><small data-t="memory.level">Level</small><b id="hudLevel">1/8</b></div>
+    <div class="stat"><small data-t="memory.moves">Moves</small><b id="hudMoves">0</b></div>
+    <div class="stat"><small data-t="memory.time">Time</small><b id="hudTime">0:00</b></div>
+  </section>
+
+  <div class="table">
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="overlay" id="overlay" hidden></div>
+
+  <script type="module" src="js/memory.js"></script>
+</body>
+</html>

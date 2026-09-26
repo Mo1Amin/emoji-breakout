@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e12">
+  <title data-t="breakout.pageTitle">Emoji Breakout</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/arcade.css">
+  <style>
+    .game-page { --game: var(--breakout); overscroll-behavior: none; }
+    .board-wrap { max-width: none; }
+    .board-wrap canvas { cursor: none; }
+    .code-row { width: 100%; max-width: 320px; }
+    .code-row input {
+      width: 100%;
+      height: var(--tap);
+      border-radius: 999px;
+      border: 2px solid var(--line);
+      background: var(--surface);
+      text-align: center;
+      direction: ltr;
+    }
+    .code-row input:focus { outline: none; border-color: var(--game); }
+  </style>
+</head>
+<body class="game-page">
+  <header class="topbar">
+    <a class="icon-btn" href="./" data-back data-t-label="back"></a>
+    <h1><span aria-hidden="true">🚀</span><span data-t="breakout.title">Emoji Breakout</span></h1>
+    <button class="icon-btn" id="codeBtn" data-t-label="breakout.codes" aria-label="Secret codes">🔑</button>
+    <button class="icon-btn" data-action="sound"></button>
+    <button class="icon-btn" data-action="lang"></button>
+  </header>
+
+  <section class="hud">
+    <div class="stat"><small data-t="score">Score</small><b id="hudScore">0</b></div>
+    <div class="stat"><small data-t="breakout.best">Best</small><b id="hudBest">0</b></div>
+    <div class="stat"><small data-t="breakout.level">Level</small><b id="hudLevel">1</b></div>
+    <div class="stat"><small data-t="breakout.lives">Lives</small><b id="hudLives">❤️❤️❤️</b></div>
+  </section>
+
+  <div class="board-wrap" id="boardWrap">
+    <canvas id="board" aria-label="Breakout board"></canvas>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <div class="code-row" id="codeRow" hidden>
+    <input id="codeInput" autocomplete="off" autocapitalize="off" spellcheck="false" data-t-placeholder="breakout.codePlaceholder" placeholder="Secret code…">
+  </div>
+
+  <script type="module" src="js/breakout.js"></script>
+</body>
+</html>
