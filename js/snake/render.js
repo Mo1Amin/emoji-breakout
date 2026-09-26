@@ -1,5 +1,6 @@
 import { COLS, LEVELS, ROWS, buildLevel, ringCells } from "./levels.js";
-import { fitCanvas } from "../ui.js";
+import { drawEmoji } from "../emoji.js";
+import { fitCanvas, readTheme } from "../ui.js";
 
 export const SNAKE_COLORS = ["#3ddc84", "#ffb13d"];
 const PORTAL_COLORS = ["#8f7bff", "#ff6fae"];
@@ -7,7 +8,6 @@ const FRUITS = ["🍎", "🍊", "🍇", "🍓", "🍉", "🍒", "🍑", "🍍", 
 const ITEM_EMOJI = { gold: "🌟", mushroom: "🍄", heart: "❤️" };
 const ENEMY_EMOJI = { patrol: "👾", chaser: "👻", boss: "🐲", meteor: "☄️" };
 const EYE_OFFSET = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
-const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
 const SOS_MS = 6000;
 
 export function createRenderer(canvas) {
@@ -15,7 +15,6 @@ export function createRenderer(canvas) {
   let cell = 20;
   let dpr = 1;
   let theme = {};
-  const sprites = new Map();
   const shade = document.createElement("canvas");
   let level = null;
   let walls = null;
@@ -27,43 +26,7 @@ export function createRenderer(canvas) {
     ctx = fitCanvas(canvas, COLS * cell, ROWS * cell);
     shade.width = canvas.width;
     shade.height = canvas.height;
-    sprites.clear();
-    readTheme();
-  }
-
-  function readTheme() {
-    const css = getComputedStyle(document.documentElement);
-    theme = {
-      dark: css.colorScheme !== "light",
-      surface: css.getPropertyValue("--surface").trim(),
-      text: css.getPropertyValue("--text").trim(),
-      muted: css.getPropertyValue("--muted").trim(),
-      accent: css.getPropertyValue("--accent").trim(),
-      danger: css.getPropertyValue("--danger").trim(),
-      font: css.getPropertyValue("--font").trim(),
-    };
-  }
-
-  function sprite(emoji, size) {
-    const key = `${emoji}|${size}`;
-    let image = sprites.get(key);
-    if (!image) {
-      image = document.createElement("canvas");
-      image.width = image.height = Math.ceil(size * dpr);
-      const g = image.getContext("2d");
-      g.scale(dpr, dpr);
-      g.font = `${size * 0.82}px ${EMOJI_FONT}`;
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.fillText(emoji, size / 2, size / 2 + size * 0.06);
-      sprites.set(key, image);
-    }
-    return image;
-  }
-
-  function drawEmoji(emoji, cx, cy, size) {
-    const rounded = Math.round(size);
-    ctx.drawImage(sprite(emoji, rounded), cx - rounded / 2, cy - rounded / 2, rounded, rounded);
+    theme = readTheme();
   }
 
   const cx = (c) => (c % COLS) * cell + cell / 2;
@@ -135,7 +98,7 @@ export function createRenderer(canvas) {
       ctx.strokeStyle = theme.accent;
       ctx.lineWidth = 2;
       ctx.stroke();
-      if (!active) drawEmoji("🔘", cx(c), cy(c), cell * 0.7);
+      if (!active) drawEmoji(ctx, "🔘", cx(c), cy(c), cell * 0.7);
     });
   }
 
@@ -158,11 +121,11 @@ export function createRenderer(canvas) {
   }
 
   function drawItems(snap, now) {
-    for (const c of level.bombs) drawEmoji("💣", cx(c), cy(c), cell * 1.05);
+    for (const c of level.bombs) drawEmoji(ctx, "💣", cx(c), cy(c), cell * 1.05);
     const fruit = FRUITS[snap.lv % FRUITS.length];
     snap.f.forEach(([c, kind], i) => {
       const bob = 1 + 0.07 * Math.sin(now / 180 + i);
-      drawEmoji(kind === "apple" ? fruit : ITEM_EMOJI[kind], cx(c), cy(c), cell * 1.1 * bob);
+      drawEmoji(ctx, kind === "apple" ? fruit : ITEM_EMOJI[kind], cx(c), cy(c), cell * 1.1 * bob);
     });
 
     for (const s of snap.sn) {
@@ -179,7 +142,7 @@ export function createRenderer(canvas) {
       ctx.beginPath();
       ctx.arc(cx(c), cy(c), cell * 0.62, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * ms) / SOS_MS);
       ctx.stroke();
-      drawEmoji("🆘", cx(c), cy(c), cell * 0.95);
+      drawEmoji(ctx, "🆘", cx(c), cy(c), cell * 0.95);
     }
   }
 
@@ -243,11 +206,7 @@ export function createRenderer(canvas) {
       ctx.globalAlpha = 1;
 
       if (s.cf) {
-        ctx.save();
-        ctx.translate(hx, hy - cell * 0.7);
-        ctx.rotate(now / 200);
-        drawEmoji("💫", 0, 0, cell * 0.8);
-        ctx.restore();
+        drawEmoji(ctx, "💫", hx, hy - cell * 0.7, cell * 0.8, now / 200);
       }
       if (me === k && snap.ph === "intro" && snap.sn.length > 1) {
         ctx.strokeStyle = color;
@@ -269,7 +228,7 @@ export function createRenderer(canvas) {
         fy = before[2] + (y - before[2]) * alpha;
       }
       const size = kind === "boss" ? 2 : 1;
-      drawEmoji(ENEMY_EMOJI[kind], (fx + size / 2) * cell, (fy + size / 2) * cell, cell * size * 1.12);
+      drawEmoji(ctx, ENEMY_EMOJI[kind], (fx + size / 2) * cell, (fy + size / 2) * cell, cell * size * 1.12);
     });
   }
 
@@ -300,7 +259,7 @@ export function createRenderer(canvas) {
     const h = ROWS * cell;
     ctx.fillStyle = theme.dark ? "rgba(13,14,18,0.72)" : "rgba(245,242,234,0.78)";
     ctx.fillRect(0, 0, w, h);
-    drawEmoji(emoji, w / 2, h / 2 - cell * 3, cell * 3.4);
+    drawEmoji(ctx, emoji, w / 2, h / 2 - cell * 3, cell * 3.4);
     ctx.fillStyle = theme.text;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -342,5 +301,5 @@ export function createRenderer(canvas) {
     if (banner) drawBanner(banner);
   }
 
-  return { resize, draw, readTheme };
+  return { resize, draw, refreshTheme: () => (theme = readTheme()) };
 }

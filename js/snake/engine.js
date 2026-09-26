@@ -1,6 +1,7 @@
 import { COLS, LEVELS, ROWS, buildLevel, ringCells } from "./levels.js";
 
 export const DIRS = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
+export const DIRECTIONS = Object.keys(DIRS);
 const OPPOSITE = { U: "D", D: "U", L: "R", R: "L" };
 
 const START_LIVES = 3;
@@ -381,7 +382,7 @@ export function createGame(playerCount, startLevel = 0) {
 
   function input(id, dir) {
     const snake = game.snakes[id];
-    if (!snake?.alive || !DIRS[dir]) return;
+    if (!snake?.alive || !DIRECTIONS.includes(dir)) return;
     if (snake.confusedMs > 0) dir = OPPOSITE[dir];
     const last = snake.queue.length ? snake.queue[snake.queue.length - 1] : snake.dir;
     if (dir === last || dir === OPPOSITE[last] || snake.queue.length >= 3) return;

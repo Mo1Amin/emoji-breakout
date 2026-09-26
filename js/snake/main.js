@@ -1,11 +1,12 @@
-import { createGame } from "./engine.js";
+import { DIRECTIONS, createGame } from "./engine.js";
 import { COLS, LEVELS, ROWS } from "./levels.js";
 import { SNAKE_COLORS, createRenderer } from "./render.js";
 import { onLangChange, t } from "../i18n.js";
 import { openLobby } from "../lobby.js";
+import { bindRoom, homeAction, isInt, isNum, oneOf } from "../online.js";
 import { playClip, sfx } from "../sfx.js";
 import { load, save } from "../storage.js";
-import { el, hideOverlay, initChrome, isTouch, showOverlay, toast } from "../ui.js";
+import { el, hideOverlay, initChrome, isTouch, onThemeChange, showOverlay, toast } from "../ui.js";
 
 const KEYS = {
   ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R",
@@ -49,7 +50,7 @@ document.documentElement.style.setProperty("--you", SNAKE_COLORS[0]);
 if (isTouch()) dpad.hidden = false;
 layout();
 window.addEventListener("resize", layout);
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => renderer.readTheme());
+onThemeChange(renderer.refreshTheme);
 requestAnimationFrame(frame);
 chooseMode();
 
@@ -65,17 +66,22 @@ async function chooseMode() {
 
   document.getElementById("pauseBtn").hidden = role !== "solo";
   if (room) {
-    netBadge.hidden = false;
-    netBadge.textContent = `${t("net.online")} · ${room.code}`;
-    room.on("message", onMessage).on("close", onDisconnect);
+    bindRoom(room, {
+      badge: netBadge,
+      overlay,
+      onMessage,
+      onClose: () => (running = false),
+      fallback: { label: t("snake.keepSolo"), onClick: continueSolo },
+    });
   }
   if (role === "guest") {
-    showOverlay(overlay, { emoji: "⏳", title: t("snake.waitHost"), text: t("snake.waitHostText"), actions: [homeAction()] });
+    showOverlay(overlay, { emoji: "⏳", title: t("snake.waitHost"), text: t("snake.waitHostText"), actions: [homeAction(room)] });
   } else showLevelPicker();
 }
 
 function unlocked() {
-  return load("snake.unlocked", 0);
+  const level = load("snake.unlocked", 0);
+  return isInt(level, 0, LEVELS.length - 1) ? level : 0;
 }
 
 function showLevelPicker() {
@@ -177,7 +183,7 @@ function onPhase(s) {
   if (s.ph === "over") {
     const text = t("snake.overText", { n: s.lv + 1, score: s.sc });
     if (role === "guest") {
-      showOverlay(overlay, { emoji: "💥", title: t("snake.over"), text: `${text} ${t("snake.hostDecides")}`, actions: [homeAction()] });
+      showOverlay(overlay, { emoji: "💥", title: t("snake.over"), text: `${text} ${t("snake.hostDecides")}`, actions: [homeAction(room)] });
     } else {
       showOverlay(overlay, {
         emoji: "💥",
@@ -186,7 +192,7 @@ function onPhase(s) {
         actions: [
           { label: t("snake.retry"), primary: true, onClick: () => startGame(s.lv) },
           { label: t("snake.pickLevel"), onClick: showLevelPicker },
-          homeAction(),
+          homeAction(room),
         ],
       });
     }
@@ -195,7 +201,7 @@ function onPhase(s) {
       emoji: "🏆",
       title: t("snake.won"),
       text: t(role === "solo" ? "snake.wonSolo" : "snake.wonCoop", { score: s.sc }),
-      actions: role === "guest" ? [homeAction()] : [{ label: t("snake.pickLevel"), primary: true, onClick: showLevelPicker }, homeAction()],
+      actions: role === "guest" ? [homeAction(room)] : [{ label: t("snake.pickLevel"), primary: true, onClick: showLevelPicker }, homeAction(room)],
     });
   } else if (!overlay.hidden && overlay.dataset.screen !== "levels" && overlay.dataset.screen !== "pause") {
     hideOverlay(overlay);
@@ -236,42 +242,38 @@ function steer(dir) {
 }
 
 function onMessage(message) {
-  if (role === "host" && message.t === "in") game?.input(1, message.d);
-  if (role === "guest" && message.t === "s") receive(message.s);
+  if (role === "host" && message.t === "in" && oneOf(message.d, DIRECTIONS)) game?.input(1, message.d);
+  if (role === "guest" && message.t === "s" && isSnapshot(message.s)) receive(message.s);
 }
 
-function onDisconnect() {
-  running = false;
-  netBadge.hidden = true;
-  const level = snap?.lv ?? 0;
-  const continueSolo = () => {
-    role = "solo";
-    room = null;
-    me = 0;
-    document.documentElement.style.setProperty("--you", SNAKE_COLORS[0]);
-    document.getElementById("pauseBtn").hidden = false;
-    game = createGame(1, level);
-    snap = prevSnap = null;
-    hideOverlay(overlay);
-    running = true;
-    publish();
-  };
-  showOverlay(overlay, {
-    emoji: "🔌",
-    title: t("net.lost"),
-    text: t("net.lostText"),
-    actions: [{ label: t("snake.keepSolo"), primary: true, onClick: continueSolo }, homeAction()],
-  });
+// A host can send anything, so the guest checks every field it indexes with
+// before drawing. Unknown emoji kinds just draw nothing.
+function isSnapshot(s) {
+  const cell = (c) => isInt(c, 0, COLS * ROWS - 1);
+  const snake = (x) =>
+    x && Array.isArray(x.b) && x.b.every(cell) && oneOf(x.d, DIRECTIONS) &&
+    (x.so === null || (Array.isArray(x.so) && cell(x.so[0]) && isNum(x.so[1], -1e4, 1e4)));
+  return (
+    s && isInt(s.lv, 0, LEVELS.length - 1) && isInt(s.ring, 0, 3) &&
+    Array.isArray(s.sn) && s.sn.length === 2 && s.sn.every(snake) &&
+    Array.isArray(s.f) && s.f.every((f) => Array.isArray(f) && cell(f[0])) &&
+    Array.isArray(s.en) && s.en.every((e) => Array.isArray(e) && isInt(e[1], 0, COLS) && isInt(e[2], 0, ROWS)) &&
+    Array.isArray(s.pl) && Array.isArray(s.ev) &&
+    [s.e, s.sc, s.li, s.tm].every((n) => isNum(n, -1e9, 1e9))
+  );
 }
 
-function homeAction() {
-  return {
-    label: t("home"),
-    onClick: () => {
-      room?.leave();
-      location.href = "./";
-    },
-  };
+function continueSolo() {
+  role = "solo";
+  room = null;
+  me = 0;
+  document.documentElement.style.setProperty("--you", SNAKE_COLORS[0]);
+  document.getElementById("pauseBtn").hidden = false;
+  game = createGame(1, snap?.lv ?? 0);
+  snap = prevSnap = null;
+  hideOverlay(overlay);
+  running = true;
+  publish();
 }
 
 function pause() {
@@ -283,7 +285,7 @@ function pause() {
     actions: [
       { label: t("resume"), primary: true, onClick: resume },
       { label: t("snake.pickLevel"), onClick: showLevelPicker },
-      homeAction(),
+      homeAction(room),
     ],
   });
   overlay.dataset.screen = "pause";

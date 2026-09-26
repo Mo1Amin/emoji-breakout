@@ -1,8 +1,9 @@
 import { COLS, ROWS, botMove, dropRow, emptyBoard, isFull, winningLine } from "./rules.js";
 import { onLangChange, t } from "../i18n.js";
 import { openLobby } from "../lobby.js";
+import { bindRoom, isInt, oneOf } from "../online.js";
 import { playClip, sfx } from "../sfx.js";
-import { el, initChrome, showOverlay, hideOverlay } from "../ui.js";
+import { el, hideOverlay, initChrome } from "../ui.js";
 
 const TOKENS = { 1: "🍓", 2: "🍋" };
 const REACTIONS = ["😂", "😎", "😱", "🔥", "👏", "🤝"];
@@ -26,6 +27,7 @@ let turn = 1;
 let starter = 1;
 let over = true;
 let busy = false;
+let lastReactionIn = 0;
 const scores = { 1: 0, 2: 0 };
 const slots = [];
 
@@ -51,9 +53,17 @@ async function chooseMode() {
   scores[1] = scores[2] = 0;
 
   if (room) {
-    netBadge.hidden = false;
-    netBadge.textContent = `${t("net.online")} · ${room.code}`;
-    room.on("message", onMessage).on("close", onDisconnect);
+    bindRoom(room, {
+      badge: netBadge,
+      overlay,
+      onMessage,
+      onClose: () => {
+        reactionsEl.hidden = true;
+        over = true;
+        paintPlayers();
+      },
+      fallback: { label: t("four.playBot"), onClick: playBot },
+    });
     buildReactions();
   }
   if (mode === "guest") {
@@ -204,42 +214,24 @@ function setStatus(text, actionLabel, action) {
 
 function onMessage(message) {
   if (message.t === "move") {
-    const col = Number(message.col);
-    const theirs = 3 - me;
-    if (!over && turn === theirs && col >= 0 && col < COLS && dropRow(board, col) !== -1) play(col);
-  } else if (message.t === "round" && mode === "guest") {
-    startRound(message.starter === 2 ? 2 : 1);
+    const { col } = message;
+    if (!over && turn === 3 - me && isInt(col, 0, COLS - 1) && dropRow(board, col) !== -1) play(col);
+  } else if (message.t === "round" && mode === "guest" && oneOf(message.starter, [1, 2])) {
+    startRound(message.starter);
   } else if (message.t === "again" && mode === "host" && over) {
     startRound(3 - starter);
-  } else if (message.t === "react" && REACTIONS.includes(message.e)) {
+  } else if (message.t === "react" && oneOf(message.e, REACTIONS) && Date.now() - lastReactionIn > 300) {
+    lastReactionIn = Date.now();
     floatReaction(message.e, "them");
   }
 }
 
-function onDisconnect() {
-  netBadge.hidden = true;
-  reactionsEl.hidden = true;
-  over = true;
-  paintPlayers();
-  showOverlay(overlay, {
-    emoji: "🔌",
-    title: t("net.lost"),
-    text: t("net.lostText"),
-    actions: [
-      {
-        label: t("four.playBot"),
-        primary: true,
-        onClick: () => {
-          room = null;
-          mode = "bot";
-          me = 1;
-          scores[1] = scores[2] = 0;
-          startRound(1);
-        },
-      },
-      { label: t("home"), onClick: () => (location.href = "./") },
-    ],
-  });
+function playBot() {
+  room = null;
+  mode = "bot";
+  me = 1;
+  scores[1] = scores[2] = 0;
+  startRound(1);
 }
 
 function buildReactions() {

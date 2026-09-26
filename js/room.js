@@ -2,6 +2,9 @@
 // two browsers; after that the game traffic goes phone to phone, which is
 // what lets the arcade stay a static site on GitHub Pages.
 const PEERJS_URL = "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js";
+// Pinned by hash: if the CDN ever serves different code, the browser refuses
+// to run it instead of handing it every player's game.
+const PEERJS_INTEGRITY = "sha384-nlUQ8ZqCbvStErob+biJNzSgltf6urV3VGqhfIfzhmg9RXmpeRm76ELw0pYnKlTR";
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const PING_EVERY = 2000;
 const DEAD_AFTER = 7000;
@@ -13,6 +16,8 @@ function loadPeerJs() {
     if (window.Peer) return resolve(window.Peer);
     const script = document.createElement("script");
     script.src = PEERJS_URL;
+    script.integrity = PEERJS_INTEGRITY;
+    script.crossOrigin = "anonymous";
     script.onload = () => resolve(window.Peer);
     script.onerror = () => {
       peerLib = null;

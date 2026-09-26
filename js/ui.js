@@ -81,6 +81,29 @@ export function isTouch() {
   return window.matchMedia("(pointer: coarse)").matches;
 }
 
+// Canvas games cannot use CSS variables directly, so they read the resolved
+// colours and re-read them when the system theme flips.
+export function readTheme() {
+  const css = getComputedStyle(document.body);
+  const value = (name) => css.getPropertyValue(name).trim();
+  return {
+    dark: css.colorScheme !== "light",
+    surface: value("--surface"),
+    surface2: value("--surface-2"),
+    line: value("--line"),
+    text: value("--text"),
+    muted: value("--muted"),
+    accent: value("--accent"),
+    danger: value("--danger"),
+    game: value("--game"),
+    font: value("--font"),
+  };
+}
+
+export function onThemeChange(fn) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", fn);
+}
+
 // Canvas backing store sized to the device pixel ratio so emoji stay sharp.
 export function fitCanvas(canvas, width, height) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
