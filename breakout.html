@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d0e12">
   <title data-t="breakout.pageTitle">Emoji Breakout</title>
@@ -14,6 +16,18 @@
     .game-page { --game: var(--breakout); overscroll-behavior: none; }
     .board-wrap { max-width: none; }
     .board-wrap canvas { cursor: none; }
+    .rival {
+      max-width: 100%;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--game) 16%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--game) 40%, transparent);
+      font-weight: 700;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .code-row { width: 100%; max-width: 320px; }
     .code-row input {
       width: 100%;
@@ -43,8 +57,11 @@
     <div class="stat"><small data-t="breakout.lives">Lives</small><b id="hudLives">❤️❤️❤️</b></div>
   </section>
 
+  <div class="rival" id="rival" aria-live="polite" hidden></div>
+
   <div class="board-wrap" id="boardWrap">
     <canvas id="board" aria-label="Breakout board"></canvas>
+    <span class="net-badge floating" id="netBadge" hidden></span>
     <div class="overlay" id="overlay" hidden></div>
   </div>
 

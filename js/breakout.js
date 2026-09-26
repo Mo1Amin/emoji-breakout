@@ -1,7 +1,11 @@
+import { drawEmoji } from "./emoji.js";
 import { t } from "./i18n.js";
+import { openLobby } from "./lobby.js";
+import { bindRoom, homeAction, isInt, isNum } from "./online.js";
+import { pick, randomSeed, seededRandom } from "./random.js";
 import { playClip, sfx } from "./sfx.js";
 import { load, save } from "./storage.js";
-import { fitCanvas, hideOverlay, initChrome, showOverlay, toast } from "./ui.js";
+import { fitCanvas, hideOverlay, initChrome, onThemeChange, readTheme, showOverlay, toast } from "./ui.js";
 
 // Everything is simulated in a fixed 360x480 world and scaled to the screen,
 // so the game plays the same on a phone and a monitor.
@@ -13,7 +17,6 @@ const GAP = 5;
 const TOP = 46;
 const PADDLE_Y = 448;
 const BALL_R = 10;
-const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
 const BALLS = ["😀", "😂", "🤩", "😎", "🤪", "👽", "🤖", "👾", "🐶", "🦄", "🍕", "⚽", "🏀", "🎮", "🚀"];
 const ROW_EMOJI = ["🍓", "🍊", "🍋", "🥝", "🫐", "🍇", "🍑"];
 const FLOWERS = ["🌸", "🌹", "🌺", "🌻", "🌼", "🌷", "💐"];
@@ -41,6 +44,8 @@ const canvas = document.getElementById("board");
 const wrap = document.getElementById("boardWrap");
 const overlay = document.getElementById("overlay");
 const codeInput = document.getElementById("codeInput");
+const rivalEl = document.getElementById("rival");
+const netBadge = document.getElementById("netBadge");
 const hud = {
   score: document.getElementById("hudScore"),
   best: document.getElementById("hudBest"),
@@ -51,8 +56,12 @@ const hud = {
 let ctx;
 let scale = 1;
 let theme = {};
-const sprites = new Map();
 
+let mode = "solo";
+let room = null;
+let random = Math.random;
+let rival = null;
+let lastSent = "";
 let state = "menu";
 let level = 1;
 let score = 0;
@@ -69,26 +78,14 @@ let keys = { left: false, right: false };
 let last = performance.now();
 
 initChrome();
-readTheme();
+theme = readTheme();
 resize();
 window.addEventListener("resize", resize);
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readTheme);
+onThemeChange(() => (theme = readTheme()));
+prepareBackdrop();
 updateHud();
-showMenu();
 requestAnimationFrame(loop);
-
-function readTheme() {
-  const css = getComputedStyle(document.documentElement);
-  theme = {
-    dark: css.colorScheme !== "light",
-    surface: css.getPropertyValue("--surface").trim(),
-    text: css.getPropertyValue("--text").trim(),
-    muted: css.getPropertyValue("--muted").trim(),
-    accent: css.getPropertyValue("--accent").trim(),
-    game: css.getPropertyValue("--breakout").trim(),
-    font: css.getPropertyValue("--font").trim(),
-  };
-}
+chooseMode();
 
 function resize() {
   const top = wrap.getBoundingClientRect().top + window.scrollY;
@@ -98,32 +95,6 @@ function resize() {
   wrap.style.height = `${(width * H) / W}px`;
   scale = width / W;
   ctx = fitCanvas(canvas, width, (width * H) / W);
-  sprites.clear();
-}
-
-function sprite(emoji, size) {
-  const px = Math.round(size * scale * Math.min(window.devicePixelRatio || 1, 2));
-  const key = `${emoji}|${px}`;
-  let image = sprites.get(key);
-  if (!image) {
-    image = document.createElement("canvas");
-    image.width = image.height = px;
-    const g = image.getContext("2d");
-    g.font = `${px * 0.82}px ${EMOJI_FONT}`;
-    g.textAlign = "center";
-    g.textBaseline = "middle";
-    g.fillText(emoji, px / 2, px / 2 + px * 0.06);
-    sprites.set(key, image);
-  }
-  return image;
-}
-
-function drawEmoji(emoji, x, y, size, angle = 0) {
-  ctx.save();
-  ctx.translate(x, y);
-  if (angle) ctx.rotate(angle);
-  ctx.drawImage(sprite(emoji, size), -size / 2, -size / 2, size, size);
-  ctx.restore();
 }
 
 function newPaddle() {
@@ -131,7 +102,7 @@ function newPaddle() {
 }
 
 function newBall(stuck = true) {
-  return { x: paddle.x, y: PADDLE_Y - BALL_R - 7, vx: 0, vy: 0, stuck, emoji: BALLS[Math.floor(Math.random() * BALLS.length)], spin: 0 };
+  return { x: paddle.x, y: PADDLE_Y - BALL_R - 7, vx: 0, vy: 0, stuck, emoji: pick(BALLS, random), spin: 0 };
 }
 
 function baseSpeed() {
@@ -158,7 +129,10 @@ function buildBricks() {
   }
 }
 
-function startGame() {
+function startGame(seed = randomSeed()) {
+  random = seededRandom(seed);
+  rival = mode === "solo" ? null : { score: 0, level: 1, lives: 3, done: false };
+  lastSent = "";
   level = 1;
   score = 0;
   lives = 3;
@@ -181,7 +155,7 @@ function startLevel() {
 function launch() {
   for (const ball of balls) {
     if (!ball.stuck) continue;
-    const angle = (Math.random() - 0.5) * 0.8;
+    const angle = (random() - 0.5) * 0.8;
     const speed = baseSpeed();
     ball.vx = Math.sin(angle) * speed;
     ball.vy = -Math.cos(angle) * speed;
@@ -313,10 +287,10 @@ function breakBrick(index) {
   for (let k = 0; k < 7; k++) {
     particles.push({ x: cx, y: cy, vx: (Math.random() - 0.5) * 5, vy: -Math.random() * 3.5, life: 40, color: k % 2 ? theme.game : theme.accent, size: 3 + Math.random() * 3 });
   }
-  if (Math.random() < 0.14) {
-    const total = POWERS.reduce((s, p) => s + p.weight, 0);
-    let pick = Math.random() * total;
-    const power = POWERS.find((p) => (pick -= p.weight) < 0);
+  if (random() < 0.14) {
+    const total = POWERS.reduce((sum, p) => sum + p.weight, 0);
+    let roll = random() * total;
+    const power = POWERS.find((p) => (roll -= p.weight) < 0);
     drops.push({ x: cx, y: cy, power });
   }
   updateHud();
@@ -338,7 +312,7 @@ function addBalls(count) {
   if (!source) return;
   const speed = Math.max(Math.hypot(source.vx, source.vy), baseSpeed());
   for (let i = 0; i < count; i++) {
-    const angle = (Math.random() - 0.5) * 1.6;
+    const angle = (random() - 0.5) * 1.6;
     balls.push({ ...newBall(false), x: source.x, y: source.y, vx: Math.sin(angle) * speed, vy: -Math.abs(Math.cos(angle) * speed) });
   }
 }
@@ -363,29 +337,124 @@ function gameOver() {
     save("emojiBounceHighScore", best);
   }
   updateHud();
+  if (rival) return showRaceResult();
   showOverlay(overlay, {
     emoji: record ? "🏆" : "💥",
     eyebrow: record ? t("breakout.newBest") : t("breakout.levelN", { n: level }),
     title: t("breakout.over"),
     text: t("breakout.overText", { score, best }),
-    actions: [
-      { label: t("breakout.again"), primary: true, onClick: startGame },
-      { label: t("home"), onClick: () => (location.href = "./") },
-    ],
+    actions: [{ label: t("breakout.again"), primary: true, onClick: () => startGame() }, homeAction()],
   });
 }
 
-function showMenu() {
-  state = "menu";
+function prepareBackdrop() {
   paddle = newPaddle();
   balls = [newBall()];
   buildBricks();
-  showOverlay(overlay, {
-    emoji: "🚀",
-    title: t("breakout.title"),
-    text: t("breakout.intro"),
-    actions: [{ label: t("breakout.play"), primary: true, onClick: startGame }],
+}
+
+async function chooseMode() {
+  const choice = await openLobby({
+    game: "breakout",
+    localChoices: [{ id: "solo", ico: "🚀", title: t("breakout.solo"), hint: t("breakout.soloHint") }],
   });
+  mode = choice.mode;
+  room = choice.room ?? null;
+  if (room) {
+    bindRoom(room, {
+      badge: netBadge,
+      overlay,
+      onMessage,
+      onClose: () => {
+        rival = null;
+        rivalEl.hidden = true;
+        if (state === "play") state = "paused";
+      },
+      fallback: { label: t("breakout.playSolo"), onClick: playSolo },
+    });
+  }
+  if (mode === "host") startRace();
+  else if (mode === "guest") waitForHost();
+  else startGame();
+}
+
+function playSolo() {
+  room = null;
+  mode = "solo";
+  startGame();
+}
+
+function startRace() {
+  const seed = randomSeed();
+  room.send({ t: "start", seed });
+  startGame(seed);
+}
+
+function waitForHost() {
+  showOverlay(overlay, { emoji: "⏳", title: t("breakout.waitHost"), actions: [homeAction(room)] });
+}
+
+function onMessage(message) {
+  if (message.t === "start" && mode === "guest" && isInt(message.seed, 0, 2 ** 32 - 1)) {
+    startGame(message.seed);
+  } else if (message.t === "again" && mode === "host" && state === "over" && rival?.done) {
+    startRace();
+  } else if (message.t === "stat" && rival) {
+    const { score: theirs, level: theirLevel, lives: theirLives, done } = message;
+    if (!isNum(theirs, 0, 1e9) || !isInt(theirLevel, 1, 1e5) || !isInt(theirLives, 0, 9) || typeof done !== "boolean") return;
+    Object.assign(rival, { score: theirs, level: theirLevel, lives: theirLives, done });
+    paintRival();
+    if (state === "over") showRaceResult();
+  }
+}
+
+// Scores go out only when they change, so a race costs a few messages a
+// second at most.
+function sendStatus() {
+  if (!rival || !room) return;
+  const status = { t: "stat", score, level, lives: Math.max(lives, 0), done: state === "over" };
+  const key = JSON.stringify(status);
+  if (key === lastSent) return;
+  lastSent = key;
+  room.send(status);
+}
+
+function paintRival() {
+  if (rivalEl.hidden === Boolean(rival)) {
+    rivalEl.hidden = !rival;
+    resize();
+  }
+  if (!rival) return;
+  const hearts = rival.done ? "💥" : "❤️".repeat(rival.lives);
+  rivalEl.textContent = `${t("breakout.rival")} · ${rival.score} · ${t("breakout.levelN", { n: rival.level })} · ${hearts}`;
+}
+
+function showRaceResult() {
+  if (!rival.done) {
+    return showOverlay(overlay, {
+      emoji: "⏳",
+      title: t("breakout.waitRival"),
+      text: t("breakout.waitRivalText", { mine: score, theirs: rival.score }),
+      actions: [homeAction(room)],
+    });
+  }
+  const outcome = score > rival.score ? "win" : score < rival.score ? "lose" : "draw";
+  if (outcome === "win") playClip("levelUp", 0.5);
+  const again =
+    mode === "host"
+      ? { label: t("breakout.again"), primary: true, onClick: startRace }
+      : { label: t("breakout.again"), primary: true, onClick: askRematch };
+  showOverlay(overlay, {
+    emoji: { win: "🏆", lose: "🥈", draw: "🤝" }[outcome],
+    title: t(`breakout.race.${outcome}`),
+    text: t("breakout.raceScore", { mine: score, theirs: rival.score }),
+    actions: [again, homeAction(room)],
+  });
+}
+
+function askRematch() {
+  room.send({ t: "again" });
+  waitForHost();
 }
 
 function draw(now) {
@@ -404,13 +473,13 @@ function draw(now) {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-    drawEmoji(b.emoji, b.x + b.w / 2, b.y + b.h / 2, 20);
+    drawEmoji(ctx, b.emoji, b.x + b.w / 2, b.y + b.h / 2, 20);
   }
 
-  for (const d of drops) drawEmoji(d.power.emoji, d.x, d.y, 24, Math.sin(now / 150) * 0.3);
+  for (const d of drops) drawEmoji(ctx, d.power.emoji, d.x, d.y, 24, Math.sin(now / 150) * 0.3);
 
   for (const p of particles) {
-    if (p.emoji) drawEmoji(p.emoji, p.x, p.y, p.size, p.life / 30);
+    if (p.emoji) drawEmoji(ctx, p.emoji, p.x, p.y, p.size, p.life / 30);
     else {
       ctx.globalAlpha = Math.max(0, p.life / 40);
       ctx.fillStyle = p.color;
@@ -426,8 +495,8 @@ function draw(now) {
   ctx.fill();
 
   for (const ball of balls) {
-    if (fire) drawEmoji("🔥", ball.x - ball.vx * 2, ball.y - ball.vy * 2, BALL_R * 2.2);
-    drawEmoji(ball.emoji, ball.x, ball.y, BALL_R * 2.4, ball.spin);
+    if (fire) drawEmoji(ctx, "🔥", ball.x - ball.vx * 2, ball.y - ball.vy * 2, BALL_R * 2.2);
+    drawEmoji(ctx, ball.emoji, ball.x, ball.y, BALL_R * 2.4, ball.spin);
   }
 
   if (balls.some((b) => b.stuck) && state === "play") {
@@ -453,7 +522,7 @@ function draw(now) {
     effects.slow > now && "🐌",
     effects.bloom && "🌸",
   ].filter(Boolean);
-  active.forEach((emoji, i) => drawEmoji(emoji, 18 + i * 26, 22, 20));
+  active.forEach((emoji, i) => drawEmoji(ctx, emoji, 18 + i * 26, 22, 20));
   ctx.restore();
 }
 
@@ -466,6 +535,8 @@ function loop(now) {
 }
 
 function updateHud() {
+  sendStatus();
+  paintRival();
   hud.score.textContent = score;
   hud.best.textContent = best;
   hud.level.textContent = level;
@@ -526,7 +597,8 @@ codeInput.addEventListener("keydown", (e) => {
   if (e.key !== "Enter") return;
   const code = codeInput.value.trim().toLowerCase();
   codeInput.value = "";
-  if (CODES[code] && state === "play") {
+  if (rival) toast(t("breakout.codesOffRace"));
+  else if (CODES[code] && state === "play") {
     CODES[code]();
     toast(t("breakout.codeOn"));
     codeInput.blur();
