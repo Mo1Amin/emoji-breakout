@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0e12">
+  <title data-t="odd.pageTitle">Odd One Out</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👀</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/arcade.css">
+  <style>
+    .game-page { --game: var(--odd); }
+    .time-bar {
+      width: 100%;
+      max-width: 520px;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .time-bar::after {
+      content: "";
+      display: block;
+      height: 100%;
+      width: calc(var(--left, 1) * 100%);
+      background: var(--game);
+      border-radius: inherit;
+      transition: width .1s linear;
+    }
+    .stage { position: relative; width: 100%; max-width: 520px; }
+    .odd-board {
+      display: grid;
+      grid-template-columns: repeat(var(--size, 3), 1fr);
+      gap: clamp(4px, 1.4vw, 8px);
+      padding: clamp(8px, 2.5vw, 14px);
+      aspect-ratio: 1;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .odd-cell {
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--surface-2);
+      font-size: calc(min(520px, 100vw - 32px) / var(--size, 3) * .5);
+      line-height: 1;
+      transition: transform .12s ease, background .2s ease;
+      animation: pop .25s ease both;
+    }
+    .odd-cell:active { transform: scale(.92); }
+    .odd-cell.wrong { animation: shake .35s ease; background: color-mix(in srgb, var(--danger) 30%, var(--surface-2)); }
+    .odd-cell.pending { outline: 3px dashed var(--game); }
+    .odd-cell.found { background: var(--ok); transform: scale(1.08); }
+    .odd-cell.stolen { background: var(--danger); transform: scale(1.08); }
+    @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+    @keyframes shake {
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .overlay { border-radius: var(--radius); }
+  </style>
+</head>
+<body class="game-page">
+  <header class="topbar">
+    <a class="icon-btn" href="./" data-back data-t-label="back"></a>
+    <h1><span aria-hidden="true">👀</span><span data-t="odd.title">Odd One Out</span></h1>
+    <span class="net-badge" id="netBadge" hidden></span>
+    <button class="icon-btn" data-action="sound"></button>
+    <button class="icon-btn" data-action="lang"></button>
+  </header>
+
+  <section class="hud" id="hud">
+    <div class="stat"><small data-t="score">Score</small><b id="hudScore">0</b></div>
+    <div class="stat"><small data-t="odd.best">Best</small><b id="hudBest">0</b></div>
+    <div class="stat"><small data-t="odd.time">Time</small><b id="hudTime">45</b></div>
+  </section>
+
+  <section class="players" id="players" hidden>
+    <div class="player p1" id="p1"><span class="token">🍓</span><span><span class="name"></span><span class="score">0</span></span></div>
+    <div class="player p2" id="p2"><span class="token">🍋</span><span><span class="name"></span><span class="score">0</span></span></div>
+  </section>
+
+  <div class="time-bar" id="timeBar"></div>
+
+  <div class="stage">
+    <div class="odd-board" id="oddBoard"></div>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <script type="module" src="js/odd.js"></script>
+</body>
+</html>
