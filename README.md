@@ -55,7 +55,7 @@ The other phone is treated as untrusted: anyone can open the console and send an
 - Light and dark themes that follow the system
 - Touch first: swipe or a d-pad for Snake, drag for Breakout, big targets everywhere
 - Progress, stars and the Breakout high score are saved in the browser
-- The home page draws the pt mark stroke by stroke and the name slides out of it; with `prefers-reduced-motion` it is simply there
+- On the first visit of a session the pt mark draws itself in the middle of the screen, flies to the top-left corner and the name stretches out beside it; a tap skips it
 
 ## ▶️ Run it
 

@@ -202,7 +202,8 @@ const ar = {
   "breakout.power.life": "روح زيادة",
 
   "hub.pageTitle": "بلايتو · العبوا مع بعض",
-  "hub.tagline": "العبوا مع بعض.",
+  "hub.title1": "العبوا",
+  "hub.title2": "مع بعض.",
   "hub.lead": "ست ألعاب إيموجي، وكلهم ينفع يتلعبوا أونلاين مع صاحبك. من غير تسجيل، كود وخلاص.",
   "hub.hockeyText": "مضرب ضد مضرب وكورة إيموجي بتطير. أول واحد يجيب ٧ جوان يكسب.",
   "hub.oddText": "كل الإيموجي شبه بعض ما عدا واحد. لاقيه قبل صاحبك.",
@@ -434,7 +435,8 @@ const en = {
   "breakout.power.life": "Extra life",
 
   "hub.pageTitle": "Playto · Play together",
-  "hub.tagline": "Play together.",
+  "hub.title1": "Play",
+  "hub.title2": "together.",
   "hub.lead": "Six emoji games, every one of them playable online with a friend. No sign-up, just a room code.",
   "hub.hockeyText": "Mallet against mallet and a flying emoji puck. First to seven wins.",
   "hub.oddText": "Every emoji looks the same except one. Find it before your friend does.",
